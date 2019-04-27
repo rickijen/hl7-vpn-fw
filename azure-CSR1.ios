@@ -94,7 +94,7 @@ router bgp 65001
 
 !summary route to null for BGP propagation
 ip route 10.225.172.0 255.255.255.0 Null0
-!route for test vm subnet back out the inside interface. .1 is the Azure Fabric
+!route for test vm subnet back out the inside interface. .129 (first available IP address) is the Azure Fabric
 ip route 10.225.172.160 255.255.255.240 10.225.172.129
 !route Azure load balancer probes back out the inside interface
 ip route 168.63.129.16 255.255.255.255 10.225.172.129
