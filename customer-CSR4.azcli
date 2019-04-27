@@ -43,17 +43,12 @@ az network nic create --resource-group onprem002 -n onprem002VMNIC --location We
 az vm create -n onprem002VM -g onprem002 --image UbuntuLTS --admin-username azureuser --admin-password Msft123Msft123 --nics onprem002VMNIC --no-wait
 
 #
-# Pause
-#
-exit
-
-#
 # UDR for onprem002 VM subnet - point next hop to CSR4 inside
 #
 az network route-table create --name vm-rt --resource-group onprem002
 az network route-table route create --name vm-rt --resource-group onprem002 --route-table-name vm-rt --address-prefix 0.0.0.0/0 --next-hop-type VirtualAppliance --next-hop-ip-address 10.100.1.4
 # Replace the public IP with yours
-az network route-table route create --name myip --resource-group onprem002 --route-table-name vm-rt --address-prefix 47.149.132.181/32 --next-hop-type Internet
+az network route-table route create --name myip --resource-group onprem002 --route-table-name vm-rt --address-prefix x.x.x.x/32 --next-hop-type Internet
 az network vnet subnet update --name testVMSubnet --vnet-name onprem002 --resource-group onprem002 --route-table vm-rt
 
 #
