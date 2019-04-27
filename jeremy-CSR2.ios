@@ -1,0 +1,95 @@
+int gi1
+no ip nat outside
+int gi2
+no ip nat inside
+!
+crypto isakmp policy 1
+ encr aes 256
+ authentication pre-share
+crypto isakmp key Msft123Msft123 address 0.0.0.0  
+!
+!
+crypto ipsec transform-set uni-perf esp-aes 256 esp-sha-hmac 
+ mode tunnel
+!
+!
+crypto ipsec profile vti-1
+ set security-association lifetime kilobytes disable
+ set security-association lifetime seconds 86400
+ set transform-set uni-perf 
+ set pfs group2
+!
+!
+interface Tunnel1
+ ip address 192.168.101.2 255.255.255.252
+ load-interval 30
+ tunnel source GigabitEthernet1
+ tunnel mode ipsec ipv4
+ tunnel destination 13.86.232.161
+ tunnel protection ipsec profile vti-1
+
+crypto ikev2 proposal to-csr3-proposal 
+ encryption aes-cbc-256
+ integrity sha1
+ group 2
+!
+crypto ikev2 policy to-csr3-policy 
+ match address local 10.0.0.5
+ proposal to-csr3-proposal
+!
+crypto ikev2 keyring to-csr3-keyring
+ peer 51.143.104.65
+  address 51.143.104.65
+  pre-shared-key Msft123Msft123
+!
+crypto ikev2 profile to-csr3-profile
+ match address local 10.0.0.5
+ match identity remote address 10.100.2.4 255.255.255.255 
+ authentication remote pre-share
+ authentication local pre-share
+ keyring local to-csr3-keyring
+ lifetime 3600
+ dpd 10 5 on-demand
+!
+crypto ipsec transform-set to-csr3-TransformSet esp-gcm 256 
+ mode tunnel
+!
+crypto ipsec profile to-csr3-IPsecProfile
+ set transform-set to-csr3-TransformSet 
+ set ikev2-profile to-csr3-profile
+!
+interface Loopback1
+ ip address 2.2.2.2 255.255.255.255
+!
+interface Tunnel11
+ ip address 192.168.1.2 255.255.255.255
+ ip tcp adjust-mss 1350
+ tunnel source 10.0.0.5
+ tunnel mode ipsec ipv4
+ tunnel destination 51.143.104.65
+ tunnel protection ipsec profile to-csr3-IPsecProfile
+!
+router bgp 65001
+ bgp log-neighbor-changes
+ bgp router-id 2.2.2.2
+ neighbor 192.168.1.33 remote-as 65003
+ neighbor 192.168.1.33 ebgp-multihop 255
+ neighbor 192.168.1.33 update-source Tunnel11
+ neighbor 192.168.101.1 remote-as 65001
+ !
+ address-family ipv4
+  neighbor 192.168.1.33 soft-reconfiguration inbound 
+  neighbor 192.168.101.2 soft-reconfiguration inbound 
+  network 2.2.2.2 mask 255.255.255.255
+  network 10.0.0.0 mask 255.255.0.0
+  network 192.168.1.2 mask 255.255.255.255
+  neighbor 192.168.1.33 activate
+  neighbor 192.168.101.1 activate
+  neighbor 192.168.101.1 next-hop-self
+  network 192.168.101.0 mask 255.255.255.252
+ exit-address-family
+!
+ip route 10.0.0.0 255.255.0.0 Null0
+ip route 10.0.10.0 255.255.255.0 10.0.1.1
+ip route 168.63.129.16 255.255.255.255 10.0.1.1
+ip route 192.168.1.33 255.255.255.255 Tunnel11
