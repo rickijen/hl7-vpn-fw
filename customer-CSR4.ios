@@ -23,14 +23,14 @@ crypto ikev2 policy to-csr2-policy
  proposal to-csr2-proposal
 !
 crypto ikev2 keyring to-csr1-keyring
- peer 13.83.244.87
-  address 13.83.244.87
+ peer 13.83.242.181
+  address 13.83.242.181
   pre-shared-key Msft123Msft123
  !
 !
 crypto ikev2 keyring to-csr2-keyring
- peer 13.83.242.155
-  address 13.83.242.155
+ peer 13.83.247.36
+  address 13.83.247.36
   pre-shared-key Msft123Msft123
 !
 crypto ikev2 profile to-csr1-profile
@@ -65,28 +65,28 @@ crypto ipsec profile to-CSR2PublicIPsecProfile
  set ikev2-profile to-csr2-profile
 !
 interface Loopback1
- ip address 3.3.3.3 255.255.255.255
+ ip address 4.4.4.4 255.255.255.255
 !
 interface Tunnel11
- ip address 192.168.1.3 255.255.255.255
+ ip address 192.168.2.3 255.255.255.255
  ip tcp adjust-mss 1350
  tunnel source 10.100.0.4
  tunnel mode ipsec ipv4
- tunnel destination 13.83.244.87
+ tunnel destination 13.83.242.181
  tunnel protection ipsec profile to-CSR1PublicIPsecProfile
 !
 interface Tunnel12
- ip address 192.168.1.33 255.255.255.255
+ ip address 192.168.2.33 255.255.255.255
  ip tcp adjust-mss 1350
  tunnel source 10.100.2.4
  tunnel mode ipsec ipv4
- tunnel destination 13.83.242.155
+ tunnel destination 13.83.247.36
  tunnel protection ipsec profile to-CSR2PublicIPsecProfile
 
 
-router bgp 65003
+router bgp 65004
  bgp log-neighbor-changes
- bgp router-id 3.3.3.3
+ bgp router-id 4.4.4.4
  neighbor 192.168.1.1 remote-as 65001
  neighbor 192.168.1.1 ebgp-multihop 255
  neighbor 192.168.1.1 update-source Tunnel11
@@ -98,17 +98,17 @@ router bgp 65003
  maximum-paths 4
   neighbor 192.168.1.1 soft-reconfiguration inbound 
   neighbor 192.168.1.2 soft-reconfiguration inbound 
-  network 3.3.3.3 mask 255.255.255.255
-  network 10.100.0.0 mask 255.255.0.0
-  network 192.168.1.3 mask 255.255.255.255
-  network 192.168.1.33 mask 255.255.255.255
+  network 4.4.4.4 mask 255.255.255.255
+  network 10.225.172.160 mask 255.255.255.240
+  network 192.168.2.3 mask 255.255.255.255
+  network 192.168.2.33 mask 255.255.255.255
   neighbor 192.168.1.1 activate
   neighbor 192.168.1.2 activate
  exit-address-family
 
 ip route 10.100.0.0 255.255.0.0 Null0
-ip route 10.100.10.0 255.255.255.0 10.100.1.1
-ip route 13.83.244.87 255.255.255.255 10.100.0.1
-ip route 13.83.242.155 255.255.255.255 10.100.2.1
+ip route 10.225.172.160 255.255.255.240 10.100.1.1
+ip route 13.83.242.181 255.255.255.255 10.100.0.1
+ip route 13.83.247.36 255.255.255.255 10.100.2.1
 ip route 192.168.1.1 255.255.255.255 Tunnel11
 ip route 192.168.1.2 255.255.255.255 Tunnel12
