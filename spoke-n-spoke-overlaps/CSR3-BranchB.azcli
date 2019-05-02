@@ -1,0 +1,38 @@
+az group create --name BranchB --location "WestUS2"
+az network vnet create --name BranchB --resource-group BranchB --address-prefix 10.100.0.0/16
+az network vnet subnet create --address-prefix 10.100.1.0/24 --name InsideSubnet --resource-group BranchB --vnet-name BranchB
+az network vnet subnet create --address-prefix 10.100.0.0/24 --name OutsideSubnet --resource-group BranchB --vnet-name BranchB
+az network vnet subnet create --address-prefix 10.100.10.0/24 --name testVMSubnet --resource-group BranchB --vnet-name BranchB
+az network vnet subnet create --address-prefix 10.100.2.0/24 --name OutsideSubnet2 --resource-group BranchB --vnet-name BranchB
+
+az network nsg create --resource-group BranchB --name BranchB-CSR-NSG --location WestUS2
+az network nsg rule create --resource-group BranchB --nsg-name BranchB-CSR-NSG --name CSR-IPSEC1 --access Allow --protocol Udp --direction Inbound --priority 100 --source-address-prefix "*" --source-port-range "*" --destination-address-prefix "*" --destination-port-range 500
+az network nsg rule create --resource-group BranchB --nsg-name BranchB-CSR-NSG --name CSR-IPSEC2 --access Allow --protocol Udp --direction Inbound --priority 110 --source-address-prefix "*" --source-port-range "*" --destination-address-prefix "*" --destination-port-range 4500
+az network nsg rule create --resource-group BranchB --nsg-name BranchB-CSR-NSG --name Allow-SSH-All --access Allow --protocol Tcp --direction Inbound --priority 120 --source-address-prefix Internet --source-port-range "*" --destination-address-prefix "*" --destination-port-range 22
+az network nsg rule create --resource-group BranchB --nsg-name BranchB-CSR-NSG --name Allow-Tens --access Allow --protocol "*" --direction Inbound --priority 130 --source-address-prefix 10.0.0.0/8 --source-port-range "*" --destination-address-prefix "*" --destination-port-range "*"
+az network nsg rule create --resource-group BranchB --nsg-name BranchB-CSR-NSG --name Allow-192 --access Allow --protocol "*" --direction Inbound --priority 135 --source-address-prefix 192.168.0.0/16 --source-port-range "*" --destination-address-prefix "*" --destination-port-range "*"
+az network nsg rule create --resource-group BranchB --nsg-name BranchB-CSR-NSG --name Allow-1s --access Allow --protocol "*" --direction Inbound --priority 136 --source-address-prefix 1.1.1.1/32 --source-port-range "*" --destination-address-prefix "*" --destination-port-range "*"
+az network nsg rule create --resource-group BranchB --nsg-name BranchB-CSR-NSG --name Allow-2s --access Allow --protocol "*" --direction Inbound --priority 137 --source-address-prefix 2.2.2.2/32 --source-port-range "*" --destination-address-prefix "*" --destination-port-range "*"
+az network nsg rule create --resource-group BranchB --nsg-name BranchB-CSR-NSG --name Allow-3s --access Allow --protocol "*" --direction Inbound --priority 138 --source-address-prefix 3.3.3.3/32 --source-port-range "*" --destination-address-prefix "*" --destination-port-range "*"
+az network nsg rule create --resource-group BranchB --nsg-name BranchB-CSR-NSG --name Allow-4s --access Allow --protocol "*" --direction Inbound --priority 139 --source-address-prefix 4.4.4.4/32 --source-port-range "*" --destination-address-prefix "*" --destination-port-range "*"
+az network nsg rule create --resource-group BranchB --nsg-name BranchB-CSR-NSG --name Allow-Out --access Allow --protocol "*" --direction Outbound --priority 140 --source-address-prefix "*" --source-port-range "*" --destination-address-prefix "*" --destination-port-range "*"
+
+az network public-ip create --name CSR3PublicIP --resource-group BranchB --idle-timeout 30 --allocation-method Static --sku standard
+az network nic create --name CSR3OutsideInterface -g BranchB --subnet OutsideSubnet --vnet BranchB --public-ip-address CSR3PublicIP --private-ip-address 10.100.0.4 --ip-forwarding true --network-security-group BranchB-CSR-NSG
+az network nic create --name CSR3InsideInterface -g BranchB --subnet InsideSubnet --vnet BranchB --ip-forwarding true --private-ip-address 10.100.1.4 --network-security-group BranchB-CSR-NSG
+az vm create --resource-group BranchB --location WestUS2 --name CSR3-BranchB --size Standard_DS3_v2 --nics CSR3OutsideInterface CSR3InsideInterface  --image cisco:cisco-csr-1000v:16_10-byol:16.10.120190108  --admin-username azureuser --admin-password Msft123Msft123 --no-wait
+
+az network nsg create --resource-group BranchB --name BranchB-VM-NSG --location WestUS2
+az network nsg rule create --resource-group BranchB --nsg-name BranchB-VM-NSG --name Allow-SSH-All --access Allow --protocol Tcp --direction Inbound --priority 120 --source-address-prefix Internet --source-port-range "*" --destination-address-prefix "*" --destination-port-range 22
+az network nsg rule create --resource-group BranchB --nsg-name BranchB-VM-NSG --name Allow-Tens --access Allow --protocol "*" --direction Inbound --priority 130 --source-address-prefix 10.0.0.0/8 --source-port-range "*" --destination-address-prefix "*" --destination-port-range "*"
+az network public-ip create --name BranchBVMPubIP --resource-group BranchB --location WestUS2 --allocation-method Dynamic
+az network nic create --resource-group BranchB -n BranchBVMNIC --location WestUS2 --subnet testVMSubnet --private-ip-address 10.100.10.10 --vnet-name BranchB --public-ip-address BranchBVMPubIP --network-security-group BranchB-VM-NSG --ip-forwarding true
+az vm create -n BranchBVM -g BranchB --image UbuntuLTS --admin-username azureuser --admin-password Msft123Msft123 --nics BranchBVMNIC --no-wait
+
+az network route-table create --name vm-rt --resource-group BranchB
+az network route-table route create --name vm-rt --resource-group BranchB --route-table-name vm-rt --address-prefix 0.0.0.0/0 --next-hop-type VirtualAppliance --next-hop-ip-address 10.100.1.4
+# Replace the public IP with yours
+az network route-table route create --name myip --resource-group BranchB --route-table-name vm-rt --address-prefix 47.149.132.181/32 --next-hop-type Internet
+az network vnet subnet update --name testVMSubnet --vnet-name BranchB --resource-group BranchB --route-table vm-rt
+
+az network public-ip show -g BranchB -n CSR3PublicIP --query "{address: ipAddress}"
