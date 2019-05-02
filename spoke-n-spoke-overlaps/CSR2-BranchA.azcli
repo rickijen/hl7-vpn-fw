@@ -47,7 +47,7 @@ az vm create -n BranchAVM -g BranchA --image UbuntuLTS --admin-username azureuse
 az network route-table create --name vm-rt --resource-group BranchA
 az network route-table route create --name vm-rt --resource-group BranchA --route-table-name vm-rt --address-prefix 0.0.0.0/0 --next-hop-type VirtualAppliance --next-hop-ip-address 10.100.1.4
 # Replace the public IP with yours
-az network route-table route create --name myip --resource-group CSR --route-table-name vm-rt --address-prefix 47.149.132.181/32 --next-hop-type Internet
+az network route-table route create --name myip --resource-group BranchA --route-table-name vm-rt --address-prefix 47.149.132.181/32 --next-hop-type Internet
 az network vnet subnet update --name testVMSubnet --vnet-name BranchA --resource-group BranchA --route-table vm-rt
 
 #
