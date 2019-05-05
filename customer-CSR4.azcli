@@ -27,9 +27,9 @@ az network nsg rule create --resource-group onprem002 --nsg-name onprem002-CSR-N
 #
 az network public-ip create --name CSR4PublicIP --resource-group onprem002 --idle-timeout 30 --allocation-method Static --sku standard
 az network public-ip create --name CSR4PublicIP2 --resource-group onprem002 --idle-timeout 30 --allocation-method Static --sku standard
-az network nic create --name CSR4OutsideInterface -g onprem002 --subnet OutsideSubnet --vnet onprem002 --public-ip-address CSR4PublicIP --private-ip-address 10.100.0.4 --ip-forwarding true --network-security-group onprem002-CSR-NSG
-az network nic create --name CSR4InsideInterface -g onprem002 --subnet InsideSubnet --vnet onprem002 --ip-forwarding true --private-ip-address 10.100.1.4 --network-security-group onprem002-CSR-NSG
-az network nic create --name CSR4OutsideInterface2 -g onprem002 --subnet OutsideSubnet2 --vnet onprem002 --public-ip-address CSR4PublicIP2 --private-ip-address 10.100.2.4 --ip-forwarding true --network-security-group onprem002-CSR-NSG
+az network nic create --name CSR4OutsideInterface -g onprem002 --subnet OutsideSubnet --vnet onprem002 --public-ip-address CSR4PublicIP --private-ip-address 10.100.0.5 --ip-forwarding true --network-security-group onprem002-CSR-NSG
+az network nic create --name CSR4InsideInterface -g onprem002 --subnet InsideSubnet --vnet onprem002 --ip-forwarding true --private-ip-address 10.100.1.5 --network-security-group onprem002-CSR-NSG
+az network nic create --name CSR4OutsideInterface2 -g onprem002 --subnet OutsideSubnet2 --vnet onprem002 --public-ip-address CSR4PublicIP2 --private-ip-address 10.100.2.5 --ip-forwarding true --network-security-group onprem002-CSR-NSG
 az vm create --resource-group onprem002 --location WestUS2 --name CSR4 --size Standard_DS4_v2 --nics CSR4OutsideInterface CSR4OutsideInterface2 CSR4InsideInterface  --image cisco:cisco-csr-1000v:16_10-byol:16.10.120190108  --admin-username azureuser --admin-password Msft123Msft123 --no-wait
 
 #
@@ -46,7 +46,7 @@ az vm create -n onprem002VM -g onprem002 --image UbuntuLTS --admin-username azur
 # UDR for onprem002 VM subnet - point next hop to CSR4 inside
 #
 az network route-table create --name vm-rt --resource-group onprem002
-az network route-table route create --name vm-rt --resource-group onprem002 --route-table-name vm-rt --address-prefix 0.0.0.0/0 --next-hop-type VirtualAppliance --next-hop-ip-address 10.100.1.4
+az network route-table route create --name vm-rt --resource-group onprem002 --route-table-name vm-rt --address-prefix 0.0.0.0/0 --next-hop-type VirtualAppliance --next-hop-ip-address 10.100.1.5
 # Replace the public IP with yours
 az network route-table route create --name myip --resource-group onprem002 --route-table-name vm-rt --address-prefix 47.149.132.181/32 --next-hop-type Internet
 az network vnet subnet update --name testVMSubnet --vnet-name onprem002 --resource-group onprem002 --route-table vm-rt
