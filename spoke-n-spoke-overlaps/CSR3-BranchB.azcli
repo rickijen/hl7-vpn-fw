@@ -3,7 +3,6 @@ az network vnet create --name BranchB --resource-group BranchB --address-prefix 
 az network vnet subnet create --address-prefix 10.100.1.0/24 --name InsideSubnet --resource-group BranchB --vnet-name BranchB
 az network vnet subnet create --address-prefix 10.100.0.0/24 --name OutsideSubnet --resource-group BranchB --vnet-name BranchB
 az network vnet subnet create --address-prefix 10.100.10.0/24 --name testVMSubnet --resource-group BranchB --vnet-name BranchB
-az network vnet subnet create --address-prefix 10.100.2.0/24 --name OutsideSubnet2 --resource-group BranchB --vnet-name BranchB
 
 az network nsg create --resource-group BranchB --name BranchB-CSR-NSG --location WestUS2
 az network nsg rule create --resource-group BranchB --nsg-name BranchB-CSR-NSG --name CSR-IPSEC1 --access Allow --protocol Udp --direction Inbound --priority 100 --source-address-prefix "*" --source-port-range "*" --destination-address-prefix "*" --destination-port-range 500

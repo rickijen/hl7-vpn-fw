@@ -6,7 +6,6 @@ az network vnet create --name BranchA --resource-group BranchA --address-prefix 
 az network vnet subnet create --address-prefix 10.100.1.0/24 --name InsideSubnet --resource-group BranchA --vnet-name BranchA
 az network vnet subnet create --address-prefix 10.100.0.0/24 --name OutsideSubnet --resource-group BranchA --vnet-name BranchA
 az network vnet subnet create --address-prefix 10.100.10.0/24 --name testVMSubnet --resource-group BranchA --vnet-name BranchA
-az network vnet subnet create --address-prefix 10.100.2.0/24 --name OutsideSubnet2 --resource-group BranchA --vnet-name BranchA
 
 #
 # NSG
