@@ -119,7 +119,7 @@ crypto ikev2 keyring to-BranchB-keyring
 !
 crypto ikev2 profile to-BranchB-profile
  match address local 10.0.0.4
- match identity remote address 10.100.0.4 255.255.255.255 
+ match identity remote address 10.100.0.5 255.255.255.255 
  authentication remote pre-share
  authentication local pre-share
  keyring local to-BranchB-keyring

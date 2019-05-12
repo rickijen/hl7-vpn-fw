@@ -17,8 +17,8 @@ az network nsg rule create --resource-group BranchB --nsg-name BranchB-CSR-NSG -
 az network nsg rule create --resource-group BranchB --nsg-name BranchB-CSR-NSG --name Allow-Out --access Allow --protocol "*" --direction Outbound --priority 140 --source-address-prefix "*" --source-port-range "*" --destination-address-prefix "*" --destination-port-range "*"
 
 az network public-ip create --name CSR3PublicIP --resource-group BranchB --idle-timeout 30 --allocation-method Static --sku standard
-az network nic create --name CSR3OutsideInterface -g BranchB --subnet OutsideSubnet --vnet BranchB --public-ip-address CSR3PublicIP --private-ip-address 10.100.0.4 --ip-forwarding true --network-security-group BranchB-CSR-NSG
-az network nic create --name CSR3InsideInterface -g BranchB --subnet InsideSubnet --vnet BranchB --ip-forwarding true --private-ip-address 10.100.1.4 --network-security-group BranchB-CSR-NSG
+az network nic create --name CSR3OutsideInterface -g BranchB --subnet OutsideSubnet --vnet BranchB --public-ip-address CSR3PublicIP --private-ip-address 10.100.0.5 --ip-forwarding true --network-security-group BranchB-CSR-NSG
+az network nic create --name CSR3InsideInterface -g BranchB --subnet InsideSubnet --vnet BranchB --ip-forwarding true --private-ip-address 10.100.1.5 --network-security-group BranchB-CSR-NSG
 az vm create --resource-group BranchB --location WestUS2 --name CSR3-BranchB --size Standard_DS3_v2 --nics CSR3OutsideInterface CSR3InsideInterface  --image cisco:cisco-csr-1000v:16_10-byol:16.10.120190108  --admin-username azureuser --admin-password Msft123Msft123 --no-wait
 
 az network nsg create --resource-group BranchB --name BranchB-VM-NSG --location WestUS2
@@ -29,7 +29,7 @@ az network nic create --resource-group BranchB -n BranchBVMNIC --location WestUS
 az vm create -n BranchBVM -g BranchB --image UbuntuLTS --admin-username azureuser --admin-password Msft123Msft123 --nics BranchBVMNIC --no-wait
 
 az network route-table create --name vm-rt --resource-group BranchB
-az network route-table route create --name vm-rt --resource-group BranchB --route-table-name vm-rt --address-prefix 0.0.0.0/0 --next-hop-type VirtualAppliance --next-hop-ip-address 10.100.1.4
+az network route-table route create --name vm-rt --resource-group BranchB --route-table-name vm-rt --address-prefix 0.0.0.0/0 --next-hop-type VirtualAppliance --next-hop-ip-address 10.100.1.5
 # Replace the public IP with yours
 az network route-table route create --name myip --resource-group BranchB --route-table-name vm-rt --address-prefix 47.149.132.181/32 --next-hop-type Internet
 az network vnet subnet update --name testVMSubnet --vnet-name BranchB --resource-group BranchB --route-table vm-rt
