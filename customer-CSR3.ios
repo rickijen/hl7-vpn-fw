@@ -23,14 +23,14 @@ crypto ikev2 policy to-csr2-policy
  proposal to-csr2-proposal
 !
 crypto ikev2 keyring to-csr1-keyring
- peer 13.83.242.181
-  address 13.83.242.181
+ peer CSR1PublicIp
+  address CSR1PublicIp
   pre-shared-key Msft123Msft123
  !
 !
 crypto ikev2 keyring to-csr2-keyring
- peer 13.83.247.36
-  address 13.83.247.36
+ peer CSR2PublicIp
+  address CSR2PublicIp
   pre-shared-key Msft123Msft123
 !
 crypto ikev2 profile to-csr1-profile
@@ -72,7 +72,7 @@ interface Tunnel11
  ip tcp adjust-mss 1350
  tunnel source 10.100.0.4
  tunnel mode ipsec ipv4
- tunnel destination 13.83.242.181
+ tunnel destination CSR1PublicIp
  tunnel protection ipsec profile to-CSR1PublicIPsecProfile
 !
 interface Tunnel12
@@ -80,7 +80,7 @@ interface Tunnel12
  ip tcp adjust-mss 1350
  tunnel source 10.100.2.4
  tunnel mode ipsec ipv4
- tunnel destination 13.83.247.36
+ tunnel destination CSR2PublicIp
  tunnel protection ipsec profile to-CSR2PublicIPsecProfile
 
 
@@ -108,7 +108,7 @@ router bgp 65003
 
 ip route 10.100.0.0 255.255.0.0 Null0
 ip route 10.100.10.0 255.255.255.0 10.100.1.1
-ip route 13.83.242.181 255.255.255.255 10.100.0.1
-ip route 13.83.247.36 255.255.255.255 10.100.2.1
+ip route CSR1PublicIp 255.255.255.255 10.100.0.1
+ip route CSR2PublicIp 255.255.255.255 10.100.2.1
 ip route 192.168.1.1 255.255.255.255 Tunnel11
 ip route 192.168.1.2 255.255.255.255 Tunnel12

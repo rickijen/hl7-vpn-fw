@@ -25,7 +25,7 @@ interface Tunnel1
  load-interval 30
  tunnel source GigabitEthernet1
  tunnel mode ipsec ipv4
- tunnel destination 13.83.247.36
+ tunnel destination CSR2PublicIp
  tunnel protection ipsec profile vti-1
 
 
@@ -49,13 +49,13 @@ crypto ikev2 policy to-csr4-policy
  proposal to-csr4-proposal
 !
 crypto ikev2 keyring to-csr3-keyring
- peer 51.143.122.125
-  address 51.143.122.125
+ peer CSR3PublicIp
+  address CSR3PublicIp
   pre-shared-key Msft123Msft123
 !
 crypto ikev2 keyring to-csr4-keyring
- peer 51.143.108.120
-  address 51.143.108.120
+ peer CSR4PublicIp
+  address CSR4PublicIp
   pre-shared-key Msft123Msft123
 !
 crypto ikev2 profile to-csr3-profile
@@ -98,7 +98,7 @@ interface Tunnel11
  ip tcp adjust-mss 1350
  tunnel source 10.225.172.20
  tunnel mode ipsec ipv4
- tunnel destination 51.143.122.125
+ tunnel destination CSR3PublicIp
  tunnel protection ipsec profile to-csr3-IPsecProfile
 !
 interface Tunnel12
@@ -106,7 +106,7 @@ interface Tunnel12
  ip tcp adjust-mss 1350
  tunnel source 10.225.172.20
  tunnel mode ipsec ipv4
- tunnel destination 51.143.108.120
+ tunnel destination CSR4PublicIp
  tunnel protection ipsec profile to-csr4-IPsecProfile
 !
 
