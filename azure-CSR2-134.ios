@@ -47,13 +47,13 @@ crypto ikev2 policy to-csr4-policy
  proposal to-csr3-proposal
 !
 crypto ikev2 keyring to-csr3-keyring
- peer CSR3PublicIp
-  address CSR3PublicIp
+ peer CSR3PublicIp2
+  address CSR3PublicIp2
   pre-shared-key Msft123Msft123
 !
 crypto ikev2 keyring to-csr4-keyring
- peer CSR4PublicIp
-  address CSR4PublicIp
+ peer CSR4PublicIp2
+  address CSR4PublicIp2
   pre-shared-key Msft123Msft123
 !
 crypto ikev2 profile to-csr3-profile
@@ -96,7 +96,7 @@ interface Tunnel11
  ip tcp adjust-mss 1350
  tunnel source 10.225.172.22
  tunnel mode ipsec ipv4
- tunnel destination CSR3PublicIp
+ tunnel destination CSR3PublicIp2
  tunnel protection ipsec profile to-csr3-IPsecProfile
 !
 interface Tunnel12
@@ -104,7 +104,7 @@ interface Tunnel12
  ip tcp adjust-mss 1350
  tunnel source 10.225.172.22
  tunnel mode ipsec ipv4
- tunnel destination CSR4PublicIp
+ tunnel destination CSR4PublicIp2
  tunnel protection ipsec profile to-csr4-IPsecProfile
 !
 router bgp 65001
