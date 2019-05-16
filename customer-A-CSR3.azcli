@@ -59,6 +59,3 @@ az network public-ip show -g CSR -n CSR2PublicIP --query "{address: ipAddress}"
 az network public-ip show -g customer-A -n CSR3PublicIP --query "{address: ipAddress}"
 az network public-ip show -g customer-A -n CSR3PublicIP2 --query "{address: ipAddress}"
 
-#
-# Finally - configure all 3 CSRs
-#

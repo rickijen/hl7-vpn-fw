@@ -1,9 +1,16 @@
-az group create --name customer-B --location "WestUS2"
+#
+# Create On-Prem VNet in West US 2
+#
+az group create --name customer-B --location WestUS2
 az network vnet create --name customer-B --resource-group customer-B --address-prefix 10.100.0.0/16
 az network vnet subnet create --address-prefix 10.100.1.0/24 --name InsideSubnet --resource-group customer-B --vnet-name customer-B
 az network vnet subnet create --address-prefix 10.100.0.0/24 --name OutsideSubnet --resource-group customer-B --vnet-name customer-B
 az network vnet subnet create --address-prefix 10.100.10.0/24 --name testVMSubnet --resource-group customer-B --vnet-name customer-B
+az network vnet subnet create --address-prefix 10.100.2.0/24 --name OutsideSubnet2 --resource-group customer-B --vnet-name customer-B
 
+#
+# Create NSG and rules for CSR4
+#
 az network nsg create --resource-group customer-B --name customer-B-CSR-NSG --location WestUS2
 az network nsg rule create --resource-group customer-B --nsg-name customer-B-CSR-NSG --name CSR-IPSEC1 --access Allow --protocol Udp --direction Inbound --priority 100 --source-address-prefix "*" --source-port-range "*" --destination-address-prefix "*" --destination-port-range 500
 az network nsg rule create --resource-group customer-B --nsg-name customer-B-CSR-NSG --name CSR-IPSEC2 --access Allow --protocol Udp --direction Inbound --priority 110 --source-address-prefix "*" --source-port-range "*" --destination-address-prefix "*" --destination-port-range 4500
@@ -13,14 +20,21 @@ az network nsg rule create --resource-group customer-B --nsg-name customer-B-CSR
 az network nsg rule create --resource-group customer-B --nsg-name customer-B-CSR-NSG --name Allow-1s --access Allow --protocol "*" --direction Inbound --priority 136 --source-address-prefix 1.1.1.1/32 --source-port-range "*" --destination-address-prefix "*" --destination-port-range "*"
 az network nsg rule create --resource-group customer-B --nsg-name customer-B-CSR-NSG --name Allow-2s --access Allow --protocol "*" --direction Inbound --priority 137 --source-address-prefix 2.2.2.2/32 --source-port-range "*" --destination-address-prefix "*" --destination-port-range "*"
 az network nsg rule create --resource-group customer-B --nsg-name customer-B-CSR-NSG --name Allow-3s --access Allow --protocol "*" --direction Inbound --priority 138 --source-address-prefix 3.3.3.3/32 --source-port-range "*" --destination-address-prefix "*" --destination-port-range "*"
-az network nsg rule create --resource-group customer-B --nsg-name customer-B-CSR-NSG --name Allow-4s --access Allow --protocol "*" --direction Inbound --priority 139 --source-address-prefix 4.4.4.4/32 --source-port-range "*" --destination-address-prefix "*" --destination-port-range "*"
 az network nsg rule create --resource-group customer-B --nsg-name customer-B-CSR-NSG --name Allow-Out --access Allow --protocol "*" --direction Outbound --priority 140 --source-address-prefix "*" --source-port-range "*" --destination-address-prefix "*" --destination-port-range "*"
 
+#
+# CSR4 public IPs and NICs. Create CSR4
+#
 az network public-ip create --name CSR4PublicIP --resource-group customer-B --idle-timeout 30 --allocation-method Static --sku standard
+az network public-ip create --name CSR4PublicIP2 --resource-group customer-B --idle-timeout 30 --allocation-method Static --sku standard
 az network nic create --name CSR4OutsideInterface -g customer-B --subnet OutsideSubnet --vnet customer-B --public-ip-address CSR4PublicIP --private-ip-address 10.100.0.5 --ip-forwarding true --network-security-group customer-B-CSR-NSG
 az network nic create --name CSR4InsideInterface -g customer-B --subnet InsideSubnet --vnet customer-B --ip-forwarding true --private-ip-address 10.100.1.5 --network-security-group customer-B-CSR-NSG
-az vm create --resource-group customer-B --location WestUS2 --name CSR4-customer-B --size Standard_DS3_v2 --nics CSR4OutsideInterface CSR4InsideInterface  --image cisco:cisco-csr-1000v:16_10-byol:16.10.120190108  --admin-username azureuser --admin-password Msft123Msft123 --no-wait
+az network nic create --name CSR4OutsideInterface2 -g customer-B --subnet OutsideSubnet2 --vnet customer-B --public-ip-address CSR4PublicIP2 --private-ip-address 10.100.2.5 --ip-forwarding true --network-security-group customer-B-CSR-NSG
+az vm create --resource-group customer-B --location WestUS2 --name CSR4 --size Standard_DS4_v2 --nics CSR4OutsideInterface CSR4OutsideInterface2 CSR4InsideInterface  --image cisco:cisco-csr-1000v:16_10-byol:16.10.120190108  --admin-username azureuser --admin-password Msft123Msft123 --no-wait
 
+#
+# Create customer-B VM
+#
 az network nsg create --resource-group customer-B --name customer-B-VM-NSG --location WestUS2
 az network nsg rule create --resource-group customer-B --nsg-name customer-B-VM-NSG --name Allow-SSH-All --access Allow --protocol Tcp --direction Inbound --priority 120 --source-address-prefix Internet --source-port-range "*" --destination-address-prefix "*" --destination-port-range 22
 az network nsg rule create --resource-group customer-B --nsg-name customer-B-VM-NSG --name Allow-Tens --access Allow --protocol "*" --direction Inbound --priority 130 --source-address-prefix 10.0.0.0/8 --source-port-range "*" --destination-address-prefix "*" --destination-port-range "*"
@@ -28,10 +42,20 @@ az network public-ip create --name customer-BVMPubIP --resource-group customer-B
 az network nic create --resource-group customer-B -n customer-BVMNIC --location WestUS2 --subnet testVMSubnet --private-ip-address 10.100.10.10 --vnet-name customer-B --public-ip-address customer-BVMPubIP --network-security-group customer-B-VM-NSG --ip-forwarding true
 az vm create -n customer-BVM -g customer-B --image UbuntuLTS --admin-username azureuser --admin-password Msft123Msft123 --nics customer-BVMNIC --no-wait
 
+#
+# UDR for customer-B VM subnet - point next hop to CSR4 inside
+#
 az network route-table create --name vm-rt --resource-group customer-B
-az network route-table route create --name vm-rt --resource-group customer-B --route-table-name vm-rt --address-prefix 0.0.0.0/0 --next-hop-type VirtualAppliance --next-hop-ip-address 10.100.1.5
+az network route-table route create --name vm-rt --resource-group customer-B --route-table-name vm-rt --address-prefix 0.0.0.0/0 --next-hop-type VirtualAppliance --next-hop-ip-address 10.100.1.4
 # Replace the public IP with yours
 az network route-table route create --name myip --resource-group customer-B --route-table-name vm-rt --address-prefix 47.149.132.181/32 --next-hop-type Internet
 az network vnet subnet update --name testVMSubnet --vnet-name customer-B --resource-group customer-B --route-table vm-rt
 
+#
+# Gather public IPs for all CSRs, needed for CSR configs
+#
+az network public-ip show -g CSR -n CSR1PublicIP --query "{address: ipAddress}"
+az network public-ip show -g CSR -n CSR2PublicIP --query "{address: ipAddress}"
 az network public-ip show -g customer-B -n CSR4PublicIP --query "{address: ipAddress}"
+az network public-ip show -g customer-B -n CSR4PublicIP2 --query "{address: ipAddress}"
+
