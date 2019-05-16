@@ -40,7 +40,7 @@ az network nsg rule create --resource-group customer-A --nsg-name customer-A-VM-
 az network nsg rule create --resource-group customer-A --nsg-name customer-A-VM-NSG --name Allow-Tens --access Allow --protocol "*" --direction Inbound --priority 130 --source-address-prefix 10.0.0.0/8 --source-port-range "*" --destination-address-prefix "*" --destination-port-range "*"
 az network public-ip create --name customer-AVMPubIP --resource-group customer-A --location WestUS2 --allocation-method Dynamic
 az network nic create --resource-group customer-A -n customer-AVMNIC --location WestUS2 --subnet testVMSubnet --private-ip-address 10.100.10.10 --vnet-name customer-A --public-ip-address customer-AVMPubIP --network-security-group customer-A-VM-NSG --ip-forwarding true
-az vm create -n customer-AVM -g customer-A --image UbuntuLTS --admin-username azureuser --admin-password Msft123Msft123 --nics customer-AVMNIC --no-wait
+az vm create -n customer-A-VM -g customer-A --image UbuntuLTS --admin-username azureuser --admin-password Msft123Msft123 --nics customer-AVMNIC --no-wait
 
 #
 # UDR for customer-A VM subnet - point next hop to CSR3 inside
