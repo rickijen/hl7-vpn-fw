@@ -203,7 +203,7 @@ ip nat pool POOL-B 10.102.1.0 10.102.1.255 netmask 255.255.255.0 type match-host
 ip nat inside source list 101 pool POOL-B vrf VRF-B
 ip route 10.102.1.0 255.255.255.0 vasiright2
 ip route 2.2.2.2 255.255.255.255 vasiright2
-ip route vrf VRF-B 10.0.0.0 255.255.0.0 vasileft2
+ip route vrf VRF-B 10.225.172.0 255.255.0.0 vasileft2
 ip route vrf VRF-B 10.100.0.0 255.255.0.0 Tunnel12
 ip route vrf VRF-A 192.168.10.2 255.255.255.255 Tunnel12
 ip route vrf VRF-B 4.4.4.4 255.255.255.255 Tunnel12
