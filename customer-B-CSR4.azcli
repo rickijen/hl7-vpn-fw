@@ -46,7 +46,7 @@ az vm create -n customer-B-VM -g customer-B --image UbuntuLTS --admin-username a
 # UDR for customer-B VM subnet - point next hop to CSR4 inside
 #
 az network route-table create --name vm-rt --resource-group customer-B
-az network route-table route create --name vm-rt --resource-group customer-B --route-table-name vm-rt --address-prefix 0.0.0.0/0 --next-hop-type VirtualAppliance --next-hop-ip-address 10.100.1.4
+az network route-table route create --name vm-rt --resource-group customer-B --route-table-name vm-rt --address-prefix 0.0.0.0/0 --next-hop-type VirtualAppliance --next-hop-ip-address 10.100.1.5
 # Replace the public IP with yours
 az network route-table route create --name myip --resource-group customer-B --route-table-name vm-rt --address-prefix 47.149.132.181/32 --next-hop-type Internet
 az network vnet subnet update --name testVMSubnet --vnet-name customer-B --resource-group customer-B --route-table vm-rt
