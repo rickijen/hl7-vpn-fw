@@ -23,12 +23,12 @@ az network nsg rule create --resource-group BranchA --nsg-name BranchA-CSR-NSG -
 az network nsg rule create --resource-group BranchA --nsg-name BranchA-CSR-NSG --name Allow-Out --access Allow --protocol "*" --direction Outbound --priority 140 --source-address-prefix "*" --source-port-range "*" --destination-address-prefix "*" --destination-port-range "*"
 
 #
-# CSR2 in Branch A
+# CSR3 in Branch A
 #
-az network public-ip create --name CSR2PublicIP --resource-group BranchA --idle-timeout 30 --allocation-method Static --sku standard
-az network nic create --name CSR2OutsideInterface -g BranchA --subnet OutsideSubnet --vnet BranchA --public-ip-address CSR2PublicIP --private-ip-address 10.100.0.4 --ip-forwarding true --network-security-group BranchA-CSR-NSG
-az network nic create --name CSR2InsideInterface -g BranchA --subnet InsideSubnet --vnet BranchA --ip-forwarding true --private-ip-address 10.100.1.4 --network-security-group BranchA-CSR-NSG
-az vm create --resource-group BranchA --location WestUS2 --name CSR2-BranchA --size Standard_DS3_v2 --nics CSR2OutsideInterface CSR2InsideInterface  --image cisco:cisco-csr-1000v:16_10-byol:16.10.120190108  --admin-username azureuser --admin-password Msft123Msft123 --no-wait
+az network public-ip create --name CSR3PublicIP --resource-group BranchA --idle-timeout 30 --allocation-method Static --sku standard
+az network nic create --name CSR3OutsideInterface -g BranchA --subnet OutsideSubnet --vnet BranchA --public-ip-address CSR3PublicIP --private-ip-address 10.100.0.4 --ip-forwarding true --network-security-group BranchA-CSR-NSG
+az network nic create --name CSR3InsideInterface -g BranchA --subnet InsideSubnet --vnet BranchA --ip-forwarding true --private-ip-address 10.100.1.4 --network-security-group BranchA-CSR-NSG
+az vm create --resource-group BranchA --location WestUS2 --name CSR3-BranchA --size Standard_DS3_v2 --nics CSR3OutsideInterface CSR3InsideInterface  --image cisco:cisco-csr-1000v:16_10-byol:16.10.120190108  --admin-username azureuser --admin-password Msft123Msft123 --no-wait
 
 #
 # Branch A VM
@@ -41,7 +41,7 @@ az network nic create --resource-group BranchA -n BranchAVMNIC --location WestUS
 az vm create -n BranchAVM -g BranchA --image UbuntuLTS --admin-username azureuser --admin-password Msft123Msft123 --nics BranchAVMNIC --no-wait
 
 #
-# UDR pointing next hop to CSR2
+# UDR pointing next hop to CSR3
 #
 az network route-table create --name vm-rt --resource-group BranchA
 az network route-table route create --name vm-rt --resource-group BranchA --route-table-name vm-rt --address-prefix 0.0.0.0/0 --next-hop-type VirtualAppliance --next-hop-ip-address 10.100.1.4
@@ -52,7 +52,5 @@ az network vnet subnet update --name testVMSubnet --vnet-name BranchA --resource
 #
 # Show public IPs
 #
-az network public-ip show -g CSR -n CSR1PublicIP --query "{address: ipAddress}"
-az network public-ip show -g CSR -n AzureVMPubIP --query "{address: ipAddress}"
-az network public-ip show -g BranchA -n CSR2PublicIP --query "{address: ipAddress}"
+az network public-ip show -g BranchA -n CSR3PublicIP --query "{address: ipAddress}"
 az network public-ip show -g BranchA -n BranchAVMPubIP --query "{address: ipAddress}"

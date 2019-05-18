@@ -25,8 +25,8 @@ crypto ikev2 policy to-BranchA-policy
  proposal to-BranchA-proposal
 !
 crypto ikev2 keyring to-BranchA-keyring
- peer CSR2PublicIP
-  address CSR2PublicIP
+ peer CSR3PublicIP
+  address CSR3PublicIP
   pre-shared-key Msft123Msft123
  !
 !
@@ -67,7 +67,7 @@ interface Tunnel11
  ip tcp adjust-mss 1350
  tunnel source 10.0.0.4
  tunnel mode ipsec ipv4
- tunnel destination CSR2PublicIP
+ tunnel destination CSR3PublicIP
  tunnel protection ipsec profile to-BranchA-IPsecProfile
 !
 interface vasileft1
@@ -111,8 +111,8 @@ crypto ikev2 policy to-BranchB-policy
  proposal to-BranchB-proposal
 !
 crypto ikev2 keyring to-BranchB-keyring
- peer CSR3PublicIP
-  address CSR3PublicIP
+ peer CSR4PublicIP
+  address CSR4PublicIP
   pre-shared-key Msft123Msft123
  !
 !
@@ -153,7 +153,7 @@ interface Tunnel12
  ip tcp adjust-mss 1350
  tunnel source 10.0.0.4
  tunnel mode ipsec ipv4
- tunnel destination CSR3PublicIP
+ tunnel destination CSR4PublicIP
  tunnel protection ipsec profile to-BranchB-IPsecProfile
 !
 
