@@ -1,5 +1,9 @@
 #
-# Create Azure VNet
+# This script will create CSR1, CSR2, AzureVM in Azure
+#
+
+#
+# Azure VNet
 #
 az group create --name CSR --location WestUS
 az network vnet create --name CSR --resource-group CSR --address-prefix 10.225.172.0/24
