@@ -1,17 +1,17 @@
 #
 # Create Azure VNet
 #
-az group create --name CSR --location "WestUS"
-az network vnet create --name CSR --resource-group CSR --address-prefix 10.0.0.0/16
-az network vnet subnet create --address-prefix 10.0.1.0/24 --name InsideSubnet --resource-group CSR --vnet-name CSR 
-az network vnet subnet create --address-prefix 10.0.0.0/24 --name OutsideSubnet --resource-group CSR --vnet-name CSR
-az network vnet subnet create --address-prefix 10.0.2.0/24 --name lbSubnet --resource-group CSR --vnet-name CSR
-az network vnet subnet create --address-prefix 10.0.10.0/24 --name testVMSubnet --resource-group CSR --vnet-name CSR
+az group create --name CSR --location WestUS
+az network vnet create --name CSR --resource-group CSR --address-prefix 10.225.172.0/24
+az network vnet subnet create --address-prefix 10.225.172.128/28 --name InsideSubnet --resource-group CSR --vnet-name CSR 
+az network vnet subnet create --address-prefix 10.225.172.16/28 --name OutsideSubnet --resource-group CSR --vnet-name CSR
+az network vnet subnet create --address-prefix 10.225.172.144/28 --name lbSubnet --resource-group CSR --vnet-name CSR
+az network vnet subnet create --address-prefix 10.225.172.160/28 --name testVMSubnet --resource-group CSR --vnet-name CSR
 
 #
 # LB
 #
-az network lb create --name csr-lb --resource-group CSR --sku Standard --private-ip-address 10.0.2.100 --subnet lbsubnet --vnet-name CSR
+az network lb create --name csr-lb --resource-group CSR --sku Standard --private-ip-address 10.225.172.148 --subnet lbsubnet --vnet-name CSR
 az network lb address-pool create -g CSR --lb-name csr-lb -n csr-backendpool
 az network lb probe create --resource-group CSR --lb-name csr-lb --name myHealthProbe --protocol tcp --port 22
 az network lb rule create -g CSR --lb-name csr-lb -n MyHAPortsRule  --protocol All --frontend-port 0 --backend-port 0 --backend-pool-name csr-backendpool --floating-ip true --probe-name myHealthProbe
@@ -30,16 +30,27 @@ az network nsg rule create --resource-group CSR --nsg-name Azure-CSR-NSG --name 
 az network nsg rule create --resource-group CSR --nsg-name Azure-CSR-NSG --name Allow-3 --access Allow --protocol "*" --direction Inbound --priority 138 --source-address-prefix 3.3.3.3/32 --source-port-range "*" --destination-address-prefix "*" --destination-port-range "*"
 az network nsg rule create --resource-group CSR --nsg-name Azure-CSR-NSG --name Allow-4 --access Allow --protocol "*" --direction Inbound --priority 139 --source-address-prefix 4.4.4.4/32 --source-port-range "*" --destination-address-prefix "*" --destination-port-range "*"
 az network nsg rule create --resource-group CSR --nsg-name Azure-CSR-NSG --name Allow-Out --access Allow --protocol "*" --direction Outbound --priority 140 --source-address-prefix "*" --source-port-range "*" --destination-address-prefix "*" --destination-port-range "*"
+
+#
+# AV Set for CSR1 and CSR2
+#
 az vm availability-set create --resource-group CSR --name myAvailabilitySet --platform-fault-domain-count 2 --platform-update-domain-count 2
 
 #
-# CSR1 in Azure
+# CSR1 public IP and NICs. Create CSR1
 #
 az network public-ip create --name CSR1PublicIP --resource-group CSR --idle-timeout 30 --allocation-method Static --sku standard
-az network public-ip create --name CSR1PublicIP2 --resource-group CSR --idle-timeout 30 --allocation-method Static --sku standard
-az network nic create --name CSR1OutsideInterface -g CSR --subnet OutsideSubnet --vnet CSR --public-ip-address CSR1PublicIP --private-ip-address 10.0.0.4 --ip-forwarding true --network-security-group Azure-CSR-NSG
-az network nic create --name CSR1InsideInterface -g CSR --subnet InsideSubnet --vnet CSR --ip-forwarding true --private-ip-address 10.0.1.4 --network-security-group Azure-CSR-NSG --lb-name csr-lb --lb-address-pools csr-backendpool
-az vm create --resource-group CSR --location WestUS --name CSR1 --size Standard_DS3_v2 --nics CSR1OutsideInterface CSR1InsideInterface --image cisco:cisco-csr-1000v:16_10-byol:16.10.120190108 --admin-username azureuser --admin-password Msft123Msft123 --availability-set myAvailabilitySet --no-wait
+az network nic create --name CSR1OutsideInterface -g CSR --subnet OutsideSubnet --vnet CSR --public-ip-address CSR1PublicIP --private-ip-address 10.225.172.20 --ip-forwarding true --network-security-group Azure-CSR-NSG
+az network nic create --name CSR1InsideInterface -g CSR --subnet InsideSubnet --vnet CSR --ip-forwarding true --private-ip-address 10.225.172.132 --network-security-group Azure-CSR-NSG --lb-name csr-lb --lb-address-pools csr-backendpool
+az vm create --resource-group CSR --location WestUS --name CSR1 --size Standard_DS4_v2 --nics CSR1OutsideInterface CSR1InsideInterface  --image cisco:cisco-csr-1000v:16_10-byol:16.10.120190108 --admin-username azureuser --admin-password Msft123Msft123 --availability-set myAvailabilitySet --no-wait
+
+#
+# CSR2 public IP and NICs. Create CSR2
+#
+az network public-ip create --name CSR2PublicIP --resource-group CSR --idle-timeout 30 --allocation-method Static --sku standard
+az network nic create --name CSR2OutsideInterface -g CSR --subnet OutsideSubnet --vnet CSR --public-ip-address CSR2PublicIP --private-ip-address 10.225.172.22 --ip-forwarding true --network-security-group Azure-CSR-NSG
+az network nic create --name CSR2InsideInterface -g CSR --subnet InsideSubnet --vnet CSR --ip-forwarding true --private-ip-address 10.225.172.133 --network-security-group Azure-CSR-NSG --lb-name csr-lb --lb-address-pools csr-backendpool
+az vm create --resource-group CSR --location WestUS --name CSR2 --size Standard_DS4_v2 --nics CSR2OutsideInterface CSR2InsideInterface  --image cisco:cisco-csr-1000v:16_10-byol:16.10.120190108 --admin-username azureuser --admin-password Msft123Msft123 --availability-set myAvailabilitySet --no-wait
 
 #
 # Azure VM
@@ -48,14 +59,14 @@ az network nsg create --resource-group CSR --name Azure-VM-NSG --location WestUS
 az network nsg rule create --resource-group CSR --nsg-name Azure-VM-NSG --name Allow-SSH-All --access Allow --protocol Tcp --direction Inbound --priority 120 --source-address-prefix Internet --source-port-range "*" --destination-address-prefix "*" --destination-port-range 22
 az network nsg rule create --resource-group CSR --nsg-name Azure-VM-NSG --name Allow-Tens --access Allow --protocol "*" --direction Inbound --priority 130 --source-address-prefix 10.0.0.0/8 --source-port-range "*" --destination-address-prefix "*" --destination-port-range "*"
 az network public-ip create --name AzureVMPubIP --resource-group CSR --location WestUS --allocation-method Dynamic
-az network nic create --resource-group CSR -n AzureVMNIC --location WestUS --subnet testVMSubnet --private-ip-address 10.0.10.10 --vnet-name CSR --public-ip-address AzureVMPubIP --network-security-group Azure-VM-NSG --ip-forwarding true
+az network nic create --resource-group CSR -n AzureVMNIC --location WestUS --subnet testVMSubnet --private-ip-address 10.225.172.170 --vnet-name CSR --public-ip-address AzureVMPubIP --network-security-group Azure-VM-NSG --ip-forwarding true
 az vm create -n AzureVM -g CSR --image UbuntuLTS --admin-username azureuser --admin-password Msft123Msft123 --nics AzureVMNIC --no-wait
 
 #
 # UDR pointing next hop to LB
 #
 az network route-table create --name vm-rt --resource-group CSR
-az network route-table route create --name vm-rt --resource-group CSR --route-table-name vm-rt --address-prefix 0.0.0.0/0 --next-hop-type VirtualAppliance --next-hop-ip-address 10.0.2.100
+az network route-table route create --name vm-rt --resource-group CSR --route-table-name vm-rt --address-prefix 0.0.0.0/0 --next-hop-type VirtualAppliance --next-hop-ip-address 10.225.172.148
 # Replace the public IP with yours
 az network route-table route create --name myip --resource-group CSR --route-table-name vm-rt --address-prefix 47.149.132.181/32 --next-hop-type Internet
 az network vnet subnet update --name testVMSubnet --vnet-name CSR --resource-group CSR --route-table vm-rt
