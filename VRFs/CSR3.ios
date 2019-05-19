@@ -2,7 +2,6 @@ int gi1
 no ip nat outside
 int gi2
 no ip nat inside
-
 !
 crypto ikev2 proposal to-azure-proposal 
  encryption aes-cbc-256
