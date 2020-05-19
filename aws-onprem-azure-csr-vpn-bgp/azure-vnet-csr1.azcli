@@ -14,6 +14,7 @@ az network nsg rule create --resource-group Site-Azure --nsg-name Azure-CSR-NSG 
 az network nsg rule create --resource-group Site-Azure --nsg-name Azure-CSR-NSG --name Allow-Out --access Allow --protocol "*" --direction Outbound --priority 140 --source-address-prefix "*" --source-port-range "*" --destination-address-prefix "*" --destination-port-range "*"
 
 # Create CSR1
+# # https://negatblog.blob.core.windows.net/lists/os_image_list
 az vm image terms accept --urn cisco:cisco-csr-1000v:17_1-byol:17.1.20200315
 az network public-ip create --name CSR1PublicIP --resource-group Site-Azure --idle-timeout 30 --allocation-method Static --sku standard
 az network nic create --name CSR1OutsideInterface --resource-group Site-Azure --subnet OutsideSubnet --vnet VNet-Azure --public-ip-address CSR1PublicIP --private-ip-address 10.0.0.4 --ip-forwarding true --network-security-group Azure-CSR-NSG
@@ -30,39 +31,14 @@ az network public-ip create --name AzureVMPubIP --resource-group Site-Azure --lo
 az network nic create --resource-group Site-Azure --name AzureVMNIC --location westus --subnet AppSubnet --private-ip-address 10.0.10.10 --vnet-name VNet-Azure --public-ip-address AzureVMPubIP --network-security-group Azure-VM-NSG --ip-forwarding true
 az vm create --name AzureVM --resource-group Site-Azure --image UbuntuLTS --admin-username azureuser --admin-password Msft123Msft123 --nics AzureVMNIC --no-wait
 
-#####################
+# Create route tables for Azure VM subnet
+az network route-table create --name vm-rt --resource-group Site-Azure
+az network route-table route create --name vm-rt --resource-group Site-Azure --route-table-name vm-rt --address-prefix 10.100.0.0/16 --next-hop-type VirtualAppliance --next-hop-ip-address 10.0.1.4
+az network route-table route create --name csr1-loopback --resource-group Site-Azure --route-table-name vm-rt --address-prefix 1.1.1.1/32 --next-hop-type VirtualAppliance --next-hop-ip-address 10.0.1.4
+az network route-table route create --name csr1-vti --resource-group Site-Azure --route-table-name vm-rt --address-prefix 192.168.1.1/32 --next-hop-type VirtualAppliance --next-hop-ip-address 10.0.1.4
+az network route-table route create --name csr3-loopback --resource-group Site-Azure --route-table-name vm-rt --address-prefix 3.3.3.3/32 --next-hop-type VirtualAppliance --next-hop-ip-address 10.0.1.4
+az network route-table route create --name csr3-vti --resource-group Site-Azure --route-table-name vm-rt --address-prefix 192.168.1.3/32 --next-hop-type VirtualAppliance --next-hop-ip-address 10.0.1.4
+az network vnet subnet update --name AppSubnet --vnet-name VNet-Azure --resource-group Site-Azure --route-table vm-rt
 
-# Create Site-OnPrem
-az group create --name Site-Onprem --location westus
-az network vnet create --name VNet-onprem --resource-group Site-Onprem --address-prefix 10.100.0.0/16
-az network vnet subnet create --address-prefix 10.100.1.0/24 --name InsideSubnet --resource-group Site-Onprem --vnet-name VNet-onprem
-az network vnet subnet create --address-prefix 10.100.0.0/24 --name OutsideSubnet --resource-group Site-Onprem --vnet-name VNet-onprem
-az network vnet subnet create --address-prefix 10.100.10.0/24 --name testVMSubnet --resource-group Site-Onprem --vnet-name VNet-onprem
-
-# Create NSG rules
-az network nsg create --resource-group Site-Onprem --name onprem-CSR-NSG --location westus
-az network nsg rule create --resource-group Site-Onprem --nsg-name onprem-CSR-NSG --name CSR-IPSEC1 --access Allow --protocol Udp --direction Inbound --priority 100 --source-address-prefix "*" --source-port-range "*" --destination-address-prefix "*" --destination-port-range 500
-az network nsg rule create --resource-group Site-Onprem --nsg-name onprem-CSR-NSG --name CSR-IPSEC2 --access Allow --protocol Udp --direction Inbound --priority 110 --source-address-prefix "*" --source-port-range "*" --destination-address-prefix "*" --destination-port-range 4500
-az network nsg rule create --resource-group Site-Onprem --nsg-name onprem-CSR-NSG --name Allow-SSH-All --access Allow --protocol Tcp --direction Inbound --priority 120 --source-address-prefix Internet --source-port-range "*" --destination-address-prefix "*" --destination-port-range 22
-az network nsg rule create --resource-group Site-Onprem --nsg-name onprem-CSR-NSG --name Allow-Tens --access Allow --protocol "*" --direction Inbound --priority 130 --source-address-prefix 10.0.0.0/8 --source-port-range "*" --destination-address-prefix "*" --destination-port-range "*"
-az network nsg rule create --resource-group Site-Onprem --nsg-name onprem-CSR-NSG --name Allow-Out --access Allow --protocol "*" --direction Outbound --priority 140 --source-address-prefix "*" --source-port-range "*" --destination-address-prefix "*" --destination-port-range "*"
-
-# Create CSR3
-az vm image terms accept --urn cisco:cisco-csr-1000v:17_1-byol:17.1.20200315
-az network public-ip create --name CSR3PublicIP --resource-group Site-Onprem --idle-timeout 30 --allocation-method Static --sku standard
-az network nic create --name CSR3OutsideInterface --resource-group Site-Onprem --subnet OutsideSubnet --vnet VNet-onprem --public-ip-address CSR3PublicIP --private-ip-address 10.100.0.4 --ip-forwarding true --network-security-group onprem-CSR-NSG
-az network nic create --name CSR3InsideInterface --resource-group Site-Onprem --subnet InsideSubnet --vnet VNet-onprem --ip-forwarding true --private-ip-address 10.100.1.4 --network-security-group onprem-CSR-NSG
-az vm create --resource-group Site-Onprem --location westus --name CSR3 --size Standard_D2_v2 --nics CSR3OutsideInterface CSR3InsideInterface  --image cisco:cisco-csr-1000v:17_1-byol:17.1.20200315  --admin-username azureuser --admin-password Msft123Msft123 --no-wait
-
-# Create NSG for On-Prem VM
-az network nsg create --resource-group Site-Onprem --name onprem-VM-NSG --location westus
-az network nsg rule create --resource-group Site-Onprem --nsg-name onprem-VM-NSG --name Allow-SSH-All --access Allow --protocol Tcp --direction Inbound --priority 120 --source-address-prefix Internet --source-port-range "*" --destination-address-prefix "*" --destination-port-range 22
-az network nsg rule create --resource-group Site-Onprem --nsg-name onprem-VM-NSG --name Allow-Tens --access Allow --protocol "*" --direction Inbound --priority 130 --source-address-prefix 10.0.0.0/8 --source-port-range "*" --destination-address-prefix "*" --destination-port-range "*"
-
-# Create On Prem VM
-az network public-ip create --name OnpremVMPubIP --resource-group Site-Onprem --location westus --allocation-method Dynamic
-az network nic create --resource-group Site-Onprem --name OnpremVMNIC --location westus --subnet testVMSubnet --private-ip-address 10.100.10.10 --vnet-name VNet-onprem --public-ip-address OnpremVMPubIP --network-security-group onprem-VM-NSG --ip-forwarding true
-az vm create --name OnpremVM --resource-group Site-Onprem --image UbuntuLTS --admin-username azureuser --admin-password Msft123Msft123 --nics OnpremVMNIC --no-wait
-
-#####################
-
+# Get public IP for CSR1
+az network public-ip show --resource-group Site-Azure -n CSR1PublicIP --query "{address: ipAddress}"
