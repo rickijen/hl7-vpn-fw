@@ -15,11 +15,11 @@ az network nsg rule create --resource-group Site-Onprem --nsg-name onprem-CSR-NS
 
 # Create CSR3
 # https://negatblog.blob.core.windows.net/lists/os_image_list
-az vm image terms accept --urn cisco:cisco-csr-1000v:17_1-byol:17.1.20200315
+az vm image terms accept --urn cisco:cisco-csr-1000v:16_12-byol:16.12.120190816
 az network public-ip create --name CSR3PublicIP --resource-group Site-Onprem --idle-timeout 30 --allocation-method Static --sku standard
 az network nic create --name CSR3OutsideInterface --resource-group Site-Onprem --subnet OutsideSubnet --vnet VNet-onprem --public-ip-address CSR3PublicIP --private-ip-address 10.100.0.4 --ip-forwarding true --network-security-group onprem-CSR-NSG
 az network nic create --name CSR3InsideInterface --resource-group Site-Onprem --subnet InsideSubnet --vnet VNet-onprem --ip-forwarding true --private-ip-address 10.100.1.4 --network-security-group onprem-CSR-NSG
-az vm create --resource-group Site-Onprem --location westus --name CSR3 --size Standard_D2_v2 --nics CSR3OutsideInterface CSR3InsideInterface  --image cisco:cisco-csr-1000v:17_1-byol:17.1.20200315  --admin-username azureuser --admin-password Msft123Msft123 --no-wait
+az vm create --resource-group Site-Onprem --location westus --name CSR3 --size Standard_D2_v2 --nics CSR3OutsideInterface CSR3InsideInterface  --image cisco:cisco-csr-1000v:16_12-byol:16.12.120190816 --admin-username azureuser --admin-password Msft123Msft123 --no-wait
 
 # Create NSG for On-Prem VM
 az network nsg create --resource-group Site-Onprem --name onprem-VM-NSG --location westus
