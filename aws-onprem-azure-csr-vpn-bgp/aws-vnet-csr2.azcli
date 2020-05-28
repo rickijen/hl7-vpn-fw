@@ -1,0 +1,45 @@
+# Create VPC-AWS
+az group create --name Site-AWS --location westus
+az network vnet create --name VPC-AWS --resource-group Site-AWS --address-prefix 10.2.0.0/16
+az network vnet subnet create --address-prefix 10.2.1.0/24 --name InsideSubnet --resource-group Site-AWS --vnet-name VPC-AWS 
+az network vnet subnet create --address-prefix 10.2.0.0/24 --name OutsideSubnet --resource-group Site-AWS --vnet-name VPC-AWS
+az network vnet subnet create --address-prefix 10.2.10.0/24 --name AppSubnet --resource-group Site-AWS --vnet-name VPC-AWS
+
+# Create NSG rules for CSR2
+az network nsg create --resource-group Site-AWS --name AWS-CSR-NSG --location westus
+az network nsg rule create --resource-group Site-AWS --nsg-name AWS-CSR-NSG --name CSR-IPSEC1 --access Allow --protocol Udp --direction Inbound --priority 100 --source-address-prefix "*" --source-port-range "*" --destination-address-prefix "*" --destination-port-range 500
+az network nsg rule create --resource-group Site-AWS --nsg-name AWS-CSR-NSG --name CSR-IPSEC2 --access Allow --protocol Udp --direction Inbound --priority 110 --source-address-prefix "*" --source-port-range "*" --destination-address-prefix "*" --destination-port-range 4500
+az network nsg rule create --resource-group Site-AWS --nsg-name AWS-CSR-NSG --name Allow-SSH-All --access Allow --protocol Tcp --direction Inbound --priority 120 --source-address-prefix Internet --source-port-range "*" --destination-address-prefix "*" --destination-port-range 22
+az network nsg rule create --resource-group Site-AWS --nsg-name AWS-CSR-NSG --name Allow-Tens --access Allow --protocol "*" --direction Inbound --priority 130 --source-address-prefix 10.0.0.0/8 --source-port-range "*" --destination-address-prefix "*" --destination-port-range "*"
+az network nsg rule create --resource-group Site-AWS --nsg-name AWS-CSR-NSG --name Allow-Out --access Allow --protocol "*" --direction Outbound --priority 140 --source-address-prefix "*" --source-port-range "*" --destination-address-prefix "*" --destination-port-range "*"
+
+# Create CSR2
+# # https://negatblog.blob.core.windows.net/lists/os_image_list
+az vm image terms accept --urn cisco:cisco-csr-1000v:16_12-byol:16.12.120190816
+az network public-ip create --name CSR2PublicIP --resource-group Site-AWS --idle-timeout 30 --allocation-method Static --sku standard
+az network nic create --name CSR2OutsideInterface --resource-group Site-AWS --subnet OutsideSubnet --vnet VPC-AWS --public-ip-address CSR2PublicIP --private-ip-address 10.2.0.4 --ip-forwarding true --network-security-group AWS-CSR-NSG
+az network nic create --name CSR2InsideInterface --resource-group Site-AWS --subnet InsideSubnet --vnet VPC-AWS --ip-forwarding true --private-ip-address 10.2.1.4 --network-security-group AWS-CSR-NSG
+az vm create --resource-group Site-AWS --location westus --name CSR2 --size Standard_DS3_v2 --nics CSR2OutsideInterface CSR2InsideInterface  --image cisco:cisco-csr-1000v:16_12-byol:16.12.120190816 --admin-username azureuser --admin-password Msft123Msft123 --no-wait
+
+# Create NSG for Azure VM
+az network nsg create --resource-group Site-AWS --name Azure-VM-NSG --location westus
+az network nsg rule create --resource-group Site-AWS --nsg-name Azure-VM-NSG --name Allow-SSH-All --access Allow --protocol Tcp --direction Inbound --priority 120 --source-address-prefix Internet --source-port-range "*" --destination-address-prefix "*" --destination-port-range 22
+az network nsg rule create --resource-group Site-AWS --nsg-name Azure-VM-NSG --name Allow-Tens --access Allow --protocol "*" --direction Inbound --priority 130 --source-address-prefix 10.0.0.0/8 --source-port-range "*" --destination-address-prefix "*" --destination-port-range "*"
+
+# Create Azure VM
+az network public-ip create --name AzureVMPubIP --resource-group Site-AWS --location westus --allocation-method Dynamic
+az network nic create --resource-group Site-AWS --name AzureVMNIC --location westus --subnet AppSubnet --private-ip-address 10.2.10.10 --vnet-name VPC-AWS --public-ip-address AzureVMPubIP --network-security-group Azure-VM-NSG --ip-forwarding true
+az vm create --name AzureVM --resource-group Site-AWS --image UbuntuLTS --admin-username azureuser --admin-password Msft123Msft123 --nics AzureVMNIC --no-wait
+
+# Create route tables for Azure App subnet
+az network route-table create --name vm-rt --resource-group Site-AWS
+az network route-table route create --name vm-rt --resource-group Site-AWS --route-table-name vm-rt --address-prefix 10.100.0.0/16 --next-hop-type VirtualAppliance --next-hop-ip-address 10.2.1.4
+az network route-table route create --name azure-rt --resource-group Site-AWS --route-table-name vm-rt --address-prefix 10.0.0.0/16 --next-hop-type VirtualAppliance --next-hop-ip-address 10.2.1.4
+az network route-table route create --name csr2-loopback --resource-group Site-AWS --route-table-name vm-rt --address-prefix 2.2.2.2/32 --next-hop-type VirtualAppliance --next-hop-ip-address 10.2.1.4
+az network route-table route create --name csr2-vti --resource-group Site-AWS --route-table-name vm-rt --address-prefix 192.168.1.2/32 --next-hop-type VirtualAppliance --next-hop-ip-address 10.2.1.4
+az network route-table route create --name csr3-loopback --resource-group Site-AWS --route-table-name vm-rt --address-prefix 3.3.3.3/32 --next-hop-type VirtualAppliance --next-hop-ip-address 10.2.1.4
+az network route-table route create --name csr3-vti --resource-group Site-AWS --route-table-name vm-rt --address-prefix 192.168.1.33/32 --next-hop-type VirtualAppliance --next-hop-ip-address 10.2.1.4
+az network vnet subnet update --name AppSubnet --vnet-name VPC-AWS --resource-group Site-AWS --route-table vm-rt
+
+# Get public IP for CSR2
+az network public-ip show --resource-group Site-AWS -n CSR2PublicIP --query "{address: ipAddress}"

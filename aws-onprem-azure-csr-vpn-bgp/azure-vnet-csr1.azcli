@@ -19,7 +19,7 @@ az vm image terms accept --urn cisco:cisco-csr-1000v:16_12-byol:16.12.120190816
 az network public-ip create --name CSR1PublicIP --resource-group Site-Azure --idle-timeout 30 --allocation-method Static --sku standard
 az network nic create --name CSR1OutsideInterface --resource-group Site-Azure --subnet OutsideSubnet --vnet VNet-Azure --public-ip-address CSR1PublicIP --private-ip-address 10.0.0.4 --ip-forwarding true --network-security-group Azure-CSR-NSG
 az network nic create --name CSR1InsideInterface --resource-group Site-Azure --subnet InsideSubnet --vnet VNet-Azure --ip-forwarding true --private-ip-address 10.0.1.4 --network-security-group Azure-CSR-NSG
-az vm create --resource-group Site-Azure --location westus --name CSR1 --size Standard_D2_v2 --nics CSR1OutsideInterface CSR1InsideInterface  --image cisco:cisco-csr-1000v:16_12-byol:16.12.120190816 --admin-username azureuser --admin-password Msft123Msft123 --no-wait
+az vm create --resource-group Site-Azure --location westus --name CSR1 --size Standard_DS3_v2 --nics CSR1OutsideInterface CSR1InsideInterface  --image cisco:cisco-csr-1000v:16_12-byol:16.12.120190816 --admin-username azureuser --admin-password Msft123Msft123 --no-wait
 
 # Create NSG for Azure VM
 az network nsg create --resource-group Site-Azure --name Azure-VM-NSG --location westus
@@ -31,9 +31,10 @@ az network public-ip create --name AzureVMPubIP --resource-group Site-Azure --lo
 az network nic create --resource-group Site-Azure --name AzureVMNIC --location westus --subnet AppSubnet --private-ip-address 10.0.10.10 --vnet-name VNet-Azure --public-ip-address AzureVMPubIP --network-security-group Azure-VM-NSG --ip-forwarding true
 az vm create --name AzureVM --resource-group Site-Azure --image UbuntuLTS --admin-username azureuser --admin-password Msft123Msft123 --nics AzureVMNIC --no-wait
 
-# Create route tables for Azure VM subnet
+# Create route tables for Azure App subnet
 az network route-table create --name vm-rt --resource-group Site-Azure
 az network route-table route create --name vm-rt --resource-group Site-Azure --route-table-name vm-rt --address-prefix 10.100.0.0/16 --next-hop-type VirtualAppliance --next-hop-ip-address 10.0.1.4
+az network route-table route create --name aws-rt --resource-group Site-Azure --route-table-name vm-rt --address-prefix 10.2.0.0/16 --next-hop-type VirtualAppliance --next-hop-ip-address 10.0.1.4
 az network route-table route create --name csr1-loopback --resource-group Site-Azure --route-table-name vm-rt --address-prefix 1.1.1.1/32 --next-hop-type VirtualAppliance --next-hop-ip-address 10.0.1.4
 az network route-table route create --name csr1-vti --resource-group Site-Azure --route-table-name vm-rt --address-prefix 192.168.1.1/32 --next-hop-type VirtualAppliance --next-hop-ip-address 10.0.1.4
 az network route-table route create --name csr3-loopback --resource-group Site-Azure --route-table-name vm-rt --address-prefix 3.3.3.3/32 --next-hop-type VirtualAppliance --next-hop-ip-address 10.0.1.4
