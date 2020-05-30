@@ -29,7 +29,7 @@ az network nsg rule create --resource-group Site-AWS --nsg-name Azure-VM-NSG --n
 # Create Azure VM
 az network public-ip create --name AzureVMPubIP --resource-group Site-AWS --location westus --allocation-method Dynamic
 az network nic create --resource-group Site-AWS --name AzureVMNIC --location westus --subnet AppSubnet --private-ip-address 10.2.10.10 --vnet-name VPC-AWS --public-ip-address AzureVMPubIP --network-security-group Azure-VM-NSG --ip-forwarding true
-az vm create --name AzureVM --resource-group Site-AWS --image UbuntuLTS --admin-username azureuser --admin-password Msft123Msft123 --nics AzureVMNIC --no-wait
+az vm create --name EC2VM --resource-group Site-AWS --image UbuntuLTS --admin-username azureuser --admin-password Msft123Msft123 --nics AzureVMNIC --no-wait
 
 # Create route tables for Azure App subnet
 az network route-table create --name vm-rt --resource-group Site-AWS
