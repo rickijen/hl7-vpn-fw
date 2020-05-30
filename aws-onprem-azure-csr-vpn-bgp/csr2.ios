@@ -68,6 +68,7 @@ router bgp 65002
     network 2.2.2.2 mask 255.255.255.255
     network 192.168.1.2 mask 255.255.255.255
     neighbor 192.168.1.33 activate
+    neighbor 3.3.3.3 activate
     exit
   exit
 
