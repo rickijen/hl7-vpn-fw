@@ -8,7 +8,7 @@ int GigabitEthernet2
 no ip nat outside
 
 int GigabitEthernet3
-!no ip nat inside
+no ip nat inside
 ip address dhcp
 no shut
 
@@ -27,8 +27,8 @@ crypto ikev2 policy to-csr1-policy
   exit
   
 crypto ikev2 keyring to-csr1-keyring
-  peer 52.241.139.172
-    address 52.241.139.172
+  peer 52.241.138.242
+    address 52.241.138.242
     pre-shared-key Msft123Msft123
     exit
   exit
@@ -65,8 +65,8 @@ crypto ikev2 policy to-csr2-policy
   exit
   
 crypto ikev2 keyring to-csr2-keyring
-  peer 52.241.136.113
-    address 52.241.136.113
+  peer 52.180.96.141
+    address 52.180.96.141
     pre-shared-key Msft123Msft123
     exit
   exit
@@ -97,7 +97,7 @@ int tunnel1
   tunnel mode ipsec ipv4
   ip tcp adjust-mss 1350
   tunnel source 10.100.0.4
-  tunnel destination 52.241.139.172
+  tunnel destination 52.241.138.242
   tunnel protection ipsec profile to-csr1-IPsecProfile
   exit
 
@@ -106,7 +106,7 @@ int tunnel2
   tunnel mode ipsec ipv4
   ip tcp adjust-mss 1350
   tunnel source 10.100.0.4
-  tunnel destination 52.241.136.113
+  tunnel destination 52.180.96.141
   tunnel protection ipsec profile to-csr2-IPsecProfile
   exit
 

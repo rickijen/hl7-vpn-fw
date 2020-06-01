@@ -16,8 +16,8 @@ crypto ikev2 policy to-csr3-policy
   exit
   
 crypto ikev2 keyring to-csr3-keyring
-  peer 52.180.102.151
-    address 52.180.102.151
+  peer 52.241.139.78
+    address 52.241.139.78
     pre-shared-key Msft123Msft123
     exit
   exit
@@ -47,7 +47,7 @@ int tunnel1
   tunnel mode ipsec ipv4
   ip tcp adjust-mss 1350
   tunnel source 10.2.0.4
-  tunnel destination 52.180.102.151
+  tunnel destination 52.241.139.78
   tunnel protection ipsec profile to-csr3-IPsecProfile
   exit 
 
