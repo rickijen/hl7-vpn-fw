@@ -65,17 +65,22 @@ router bgp 65001
   address-family ipv4
     neighbor 192.168.1.3 soft-reconfiguration inbound
     network 10.0.0.0 mask 255.255.0.0
+    network 10.3.0.0 mask 255.255.0.0
     network 1.1.1.1 mask 255.255.255.255
     network 192.168.1.1 mask 255.255.255.255
     neighbor 192.168.1.3 activate
-    neighbor 3.3.3.3 activate  
+    neighbor 3.3.3.3 activate
     exit
   exit
 
-!route BGP peer IP over the tunnel
+! route BGP peer IP over the tunnel
 ip route 192.168.1.3 255.255.255.255 tunnel1
 ip route 10.0.0.0 255.255.0.0 null0
+ip route 10.3.0.0 255.255.0.0 null0
 ip route 3.3.3.3 255.255.255.255 Tunnel1
 
-!route for App subnet
+! route for App subnet
 ip route 10.0.10.0 255.255.255.0 10.0.1.1
+! route for subnets in Spoke VNet
+ip route 10.3.1.0 255.255.255.0 10.0.1.1
+ip route 10.3.0.0 255.255.255.0 10.0.1.1
