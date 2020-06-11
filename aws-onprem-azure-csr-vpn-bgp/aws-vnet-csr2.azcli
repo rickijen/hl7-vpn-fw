@@ -26,7 +26,7 @@ az network nsg create --resource-group Site-AWS --name Azure-VM-NSG --location w
 az network nsg rule create --resource-group Site-AWS --nsg-name Azure-VM-NSG --name Allow-SSH-All --access Allow --protocol Tcp --direction Inbound --priority 120 --source-address-prefix Internet --source-port-range "*" --destination-address-prefix "*" --destination-port-range 22
 az network nsg rule create --resource-group Site-AWS --nsg-name Azure-VM-NSG --name Allow-Tens --access Allow --protocol "*" --direction Inbound --priority 130 --source-address-prefix 10.0.0.0/8 --source-port-range "*" --destination-address-prefix "*" --destination-port-range "*"
 
-# Create Azure VM
+# Create EC2 VM
 az network public-ip create --name EC2VMPubIP --resource-group Site-AWS --location westus --allocation-method Dynamic
 az network nic create --resource-group Site-AWS --name EC2VMNIC --location westus --subnet AppSubnet --private-ip-address 10.2.10.10 --vnet-name VPC-AWS --public-ip-address EC2VMPubIP --network-security-group Azure-VM-NSG --ip-forwarding true
 az vm create --name EC2VM --resource-group Site-AWS --image UbuntuLTS --admin-username azureuser --admin-password Msft123Msft123 --nics EC2VMNIC --no-wait
